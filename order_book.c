@@ -20,9 +20,10 @@ void insert_node(treeStruct *tree, node *new_node) {
             // Logic for a new larger price
             if (curr_node->right == NULL) {
                 curr_node->right = new_node;
-                //BALANCING
-                found = true;  // TODO: might not need this
                 new_node->parent = curr_node;
+                // Balance tree if issues caused
+                balance_tree_insert(tree, new_node);
+                found = true;  // TODO: might not need this
                 tree->size += 1;
                 return;
             } else {
@@ -31,11 +32,10 @@ void insert_node(treeStruct *tree, node *new_node) {
         } else if (new_node->price < curr_node->price) {
             if (curr_node->left == NULL) {
                 curr_node->left = new_node;
-                if (curr_node->colour == Red) {
-                    //PROBLEM WITH BALANCE
-                }
-                found = true;  // TODO: might not need this
                 new_node->parent = curr_node;
+                // Balance tree if issues caused
+                balance_tree_insert(tree, new_node);
+                found = true;  // TODO: might not need this
                 tree->size += 1;
                 return;
             } else {
@@ -67,12 +67,12 @@ void balance_tree_insert(treeStruct *tree, node *curr_node) {
                 if (curr_node == curr_node->parent->right) {
                     // If node is right child, rotate left first
                     curr_node = curr_node->parent;
-                    trinode_left_rotation(curr_node);
+                    trinode_left_rotation(tree, curr_node);
                 } 
                 // Right rotate and recolour
                 curr_node->parent->colour = Black;
                 curr_node->parent->parent->colour = Red;
-                trinode_right_rotate(curr_node->parent->parent);
+                trinode_right_rotate(tree, curr_node->parent->parent);
             }
         } else {
             node *uncle = curr_node->parent->parent->left;
@@ -87,11 +87,11 @@ void balance_tree_insert(treeStruct *tree, node *curr_node) {
                 //Tri-node rotation needed
                 if (curr_node == curr_node->parent->left) {
                     curr_node = curr_node->parent;
-                    trinode_right_rotation(curr_node);
+                    trinode_right_rotation(tree, curr_node);
                 }
                 curr_node->parent->colour = Black;
                 curr_node->parent->parent->colour = Red;
-                trinode_left_rotation(curr_node->parent->parent);
+                trinode_left_rotation(tree, curr_node->parent->parent);
             }
         }
     }
@@ -100,13 +100,51 @@ void balance_tree_insert(treeStruct *tree, node *curr_node) {
 }
 
 // Rotate nodes to balance tree
-void trinode_right_rotation() {
+void trinode_right_rotation(treeStruct *tree, node *curr_node) {
+    node *left_child = curr_node->left;
 
+    // Set left childs new parent to be current nodes parent
+    left_child->parent = curr_node->parent;
+    if (curr_node->parent == NULL) {
+        tree->root = left_child;
+    } else if (curr_node == curr_node->parent->left) {
+        curr_node->parent->left = left_child;
+    } else {
+        curr_node->parent->right = left_child;
+    }
+    // Set left childs right subtree to be left subtree of node
+    curr_node->left = left_child->right;
+    // If necessary change parent of subtree root
+    if (left_child->right != NULL) {
+        left_child->right->parent = curr_node;
+    }
+    // Change parent of current node to be left child
+    left_child->right = curr_node;
+    curr_node->parent = left_child;
 }
 
 // Rotate nodes to balance tree
-void trinode_left_rotation() {
+void trinode_left_rotation(treeStruct *tree, node *curr_node) {
+    node *right_child = curr_node->right;
 
+    // Set right childs new parent to be current nodes parent
+    right_child->parent = curr_node->parent;
+    if (curr_node->parent == NULL) {
+        tree->root = right_child;
+    } else if (curr_node == curr_node->parent->right) {
+        curr_node->parent->right = right_child;
+    } else {
+        curr_node->parent->left = right_child;
+    }
+    // Set right childs left subtree to be right subtree of node
+    curr_node->right = right_child->left;
+    // If necessary change parent of subtree root
+    if (right_child->left != NULL) {
+        right_child->left->parent = curr_node;
+    }
+    // Change parent of current node to be right child
+    right_child->left = curr_node;
+    curr_node->parent = right_child;
 }
 
 // Remove node from a tree and balance it
