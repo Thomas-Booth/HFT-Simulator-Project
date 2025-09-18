@@ -1,6 +1,7 @@
 #include "order_book.h"
 #include "data_read.c"
 
+
 #define MAX_TREE_SIZE 10
 
 
@@ -553,17 +554,17 @@ void print_tree_recursive(node *root, int depth, char *prefix) {
 orderLine ol;
 char filename[] = "GBPUSD_mt5_ticks.csv";  //TODO: Improve this
 
-void main() {
+/* void main() {
     // Initialise file pointer - so we can leave file open
     FILE *fp = open_data_file(filename);
     // Initialise bid and ask trees
     treeStruct bidTree = {Bid, NULL, 0};
     treeStruct askTree = {Ask, NULL, 0};
     
-    /* while (read_next_line(fp, &ol) > 0) {
+     while (read_next_line(fp, &ol) > 0) {
         printf("Tick: %s %s bid=%.5f ask=%.5f vol_bid=%.2f vol_ask=%.2f\n",
                ol.date, ol.time, ol.bidPrice, ol.askPrice, ol.bidVolume, ol.askVolume);
-    } */
+    } 
 
     while (read_next_line(fp, &ol) > 0) {
         node *bid_node = malloc(sizeof(node));
@@ -584,4 +585,4 @@ void main() {
         insert_node(&askTree, ask_node);
         print_tree_visual(&askTree);
     }
-}
+} */

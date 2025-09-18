@@ -1,7 +1,4 @@
 #include "data_read.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #define MAX_ROW_LENGTH 77
 
