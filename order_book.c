@@ -72,8 +72,6 @@ void insert_node(treeStruct *tree, node *new_node) {
 }
 
 
-
-
 // Balance Red-Black Tree
 void balance_tree_insert(treeStruct *tree, node *curr_node) {
     while (curr_node != NULL && curr_node->parent != NULL && curr_node->parent->colour == Red) {
@@ -267,6 +265,8 @@ void delete_node(treeStruct *tree, node *delNode) {
     tree->size -= 1;
 }
 
+
+// Balance tree after deletion of node
 void balance_tree_delete(treeStruct *tree, node *fixup_node, node *parent, bool is_left_child) {
     // Continue until we reach root or find a red node to recolor black
     while (fixup_node != tree->root && (fixup_node == NULL || fixup_node->colour == Black)) {
@@ -359,6 +359,7 @@ void balance_tree_delete(treeStruct *tree, node *fixup_node, node *parent, bool 
         fixup_node->colour = Black;
     }
 }
+
 
 // Used for deleting all nodes better than new best
 void recursive_delete(treeStruct *tree, node *curr_node, node *best_node) {
@@ -482,6 +483,7 @@ void free_nodes(node *curr_node) {
     free(curr_node); // free this node AFTER its children
 }
 
+
 // Free up all nodes in the tree
 void free_tree(treeStruct *tree) {
     if (tree == NULL) {
@@ -491,6 +493,7 @@ void free_tree(treeStruct *tree) {
     tree->root = NULL;
     tree->size = 0;
 }
+
 
 //! PRINTING TREE -- PROBABLY DELETE
 // Visual tree structure (horizontal layout)
@@ -507,6 +510,7 @@ void print_tree_visual(treeStruct *tree) {
     print_tree_recursive(tree->root, 0, "ROOT");
     printf("\n");
 }
+
 
 void print_tree_recursive(node *root, int depth, char *prefix) {
     if (root == NULL) {
