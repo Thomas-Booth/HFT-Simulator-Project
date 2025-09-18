@@ -4,6 +4,21 @@
 
 // Insert new nodes into the tree until it's max-size is reached
 void insert_node(treeStruct *tree, node *new_node) {
+    /* Find current best node and compare prices to check if possible trade occured
+       Since our data doesn't contain trade data we can only make assumptions
+       and infer when a trade could have occured, so by checking if we have a new
+       best that is worse than before, we can assume a trader took advantage of the
+       previous, better price(s) for the bid/ask and so we can remove them from our tree
+    */
+    node *best_node = find_best_node(tree);
+    if (tree->type == Bid && best_node != NULL && new_node->price < best_node->price) {
+        // Delete nodes better than new best
+        recursive_delete(tree, tree->root, new_node);
+    } else if (tree->type == Ask && best_node != NULL && new_node->price > best_node->price) {
+        // Delete nodes better than new best
+        recursive_delete(tree, tree->root, new_node);
+    }
+    // Check if tree empty
     if (tree->size == 0) {
         tree->root = new_node;
         new_node->colour = Black;  // Using the rule that the root is always black... At least to start with
@@ -13,6 +28,7 @@ void insert_node(treeStruct *tree, node *new_node) {
     node *curr_node = tree->root;
     // Inserting a node will always be a red node
     new_node->colour = Red;
+    // Insert the new node into the tree
     while (true) {
         if (new_node->price > curr_node->price) {
             // Logic for a new larger price
@@ -22,6 +38,10 @@ void insert_node(treeStruct *tree, node *new_node) {
                 // Balance tree if issues caused
                 balance_tree_insert(tree, new_node);
                 tree->size += 1;
+                if (tree->size > 10) {
+                    curr_node = find_worst_node(tree);
+                    delete_node(tree, curr_node);
+                }
                 return;
             } else {
                 curr_node = curr_node->right;
@@ -33,6 +53,10 @@ void insert_node(treeStruct *tree, node *new_node) {
                 // Balance tree if issues caused
                 balance_tree_insert(tree, new_node);
                 tree->size += 1;
+                if (tree->size > 10) {
+                    curr_node = find_worst_node(tree);
+                    delete_node(tree, curr_node);
+                }
                 return;
             } else {
                 curr_node = curr_node->left;
@@ -43,6 +67,8 @@ void insert_node(treeStruct *tree, node *new_node) {
         }
     }
 }
+
+
 
 
 // Balance Red-Black Tree
@@ -234,6 +260,8 @@ void delete_node(treeStruct *tree, node *delNode) {
     if (deleted_color == Black) {
         balance_tree_delete(tree, fixup_node, fixup_parent, deleted_was_left_child);
     }
+    // Make tree size smaller to allow new node to be added
+    tree->size -= 1;
 }
 
 void balance_tree_delete(treeStruct *tree, node *fixup_node, node *parent, bool is_left_child) {
@@ -329,6 +357,26 @@ void balance_tree_delete(treeStruct *tree, node *fixup_node, node *parent, bool 
     }
 }
 
+// Used for deleting all nodes better than new best
+void recursive_delete(treeStruct *tree, node *curr_node, node *best_node) {
+    if (curr_node == NULL) {
+        return;
+    }
+    recursive_delete(tree, curr_node->left, best_node);
+    recursive_delete(tree, curr_node->right, best_node);
+
+    if (tree->type == Bid) {
+        if (curr_node->price > best_node->price) {
+            delete_node(tree, curr_node);
+        }
+    } else {
+        if (curr_node->price < best_node->price) {
+            delete_node(tree, curr_node);
+        }
+    }
+    
+}
+
 
 // Find inorder successor of a node for BST deletion
 node *inorder_successor(node *delNode) {
@@ -370,9 +418,52 @@ node *search_tree(treeStruct *tree, double searchPrice) {
 }
 
 
-// Alter the fixed sized trees to retain their rules
-void update_node() {
+// Find best ask or bid price depending on tree
+node *find_best_node(treeStruct *tree) {
+    node *curr_node = tree->root;
+    // Check if tree empty
+    if (curr_node == NULL) {
+        return NULL;
+    }
+    if (tree->type == Bid) {
+        while (curr_node->right != NULL) {
+            curr_node = curr_node->right;
+        }
+        return curr_node;
+    } else {
+        while (curr_node->left != NULL) {
+            curr_node = curr_node->left;
+        }
+        return curr_node;
+    }
+}
 
+
+// Find worst ask or bid price depending on tree
+node *find_worst_node(treeStruct *tree) {
+    node *curr_node = tree->root;
+    // Check if tree empty
+    if (curr_node == NULL) {
+        return NULL;
+    }
+    if (tree->type == Bid) {
+        while (curr_node->left != NULL) {
+            curr_node = curr_node->left;
+        }
+        return curr_node;
+    } else {
+        while (curr_node->right != NULL) {
+            curr_node = curr_node->right;
+        }
+        return curr_node;
+    }
+}
+
+
+// Alter the volume of an order
+void update_node_volume(treeStruct *tree, double price, double volumeChange) {
+    node *curr_node = search_tree(tree, price);
+    curr_node->volume += volumeChange;
 }
 
 

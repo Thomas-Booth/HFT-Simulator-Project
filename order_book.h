@@ -16,6 +16,7 @@ typedef struct {
 } node;
 
 typedef struct {
+    tradeType type;
     node *root = NULL;
     int size = 0;
 } treeStruct;
