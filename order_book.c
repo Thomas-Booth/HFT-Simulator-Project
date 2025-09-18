@@ -146,61 +146,186 @@ void trinode_left_rotation(treeStruct *tree, node *curr_node) {
 }
 
 
-// Remove node from a tree and balance it -- Search for node before calling
-void delete_node(treeStruct *tree, node *delNode) {  //TODO: Root node case + colour check/balancing
+// Delete a node from a given tree while maintaining balance
+void delete_node(treeStruct *tree, node *delNode) {
+    // Keep track of moving nodes and data
     node *replacement = NULL;
-    // If node has no children
+    node *fixup_node = NULL;
+    node *fixup_parent = NULL;
+    nodeColour deleted_color = delNode->colour;
+    bool deleted_was_left_child = false;
+
+    // Track if delNode was a left child of its parent
+    if (delNode->parent != NULL) {
+        deleted_was_left_child = (delNode == delNode->parent->left) ? true : false;
+    }
+    // Node has no children
     if (delNode->left == NULL && delNode->right == NULL) {
-        if (delNode == delNode->parent->left) {
+        fixup_parent = delNode->parent;
+        if (delNode->parent == NULL) {
+            tree->root = NULL;
+        } else if (deleted_was_left_child) {
             delNode->parent->left = NULL;
-            delNode = NULL;
         } else {
             delNode->parent->right = NULL;
-            delNode = NULL;
         }
-    // If node has one child
-    } else if (delNode->left == NULL || delNode->right == NULL) {
+    }
+    //Node has one child
+    else if (delNode->left == NULL || delNode->right == NULL) {
         replacement = (delNode->left != NULL) ? delNode->left : delNode->right;
+        fixup_node = replacement;
+        fixup_parent = delNode->parent;
+        
         replacement->parent = delNode->parent;
+        
         if (delNode->parent == NULL) {
             tree->root = replacement;
-        } else if (delNode == delNode->parent->left) {
+        } else if (deleted_was_left_child) {
             delNode->parent->left = replacement;
         } else {
             delNode->parent->right = replacement;
         }
-    // If delNode has two child nodes
-    } else {
-        node *successor_node = inorder_successor(delNode);
-        replacement = successor_node->right; // TODO: CHECK IF NEEDED FOR BALANCING
-
-        // Remove successor from current position
-        if (successor_node->parent != delNode) {
-            successor_node->parent->left = successor_node->right;
-            if (successor_node->right != NULL) {
-                successor_node->right->parent = successor_node->parent;
+    }
+    // Node has two children
+    else {
+        node *successor = inorder_successor(delNode);
+        // Color of the actually removed node
+        deleted_color = successor->colour; 
+        fixup_node = successor->right;
+        
+        if (successor->parent == delNode) {
+            // Successor is direct right child of delNode
+            fixup_parent = successor;
+            deleted_was_left_child = false; 
+        } else {
+            // Successor is further down the tree
+            fixup_parent = successor->parent;
+            // successor is always left child of its parent
+            deleted_was_left_child = true; 
+            
+            // Remove successor from its current position
+            successor->parent->left = successor->right;
+            if (successor->right != NULL) {
+                successor->right->parent = successor->parent;
             }
-            successor_node->right = delNode->right;
-            delNode->right->parent = successor_node;
+            
+            // Connect successor to delNode's right subtree
+            successor->right = delNode->right;
+            delNode->right->parent = successor;
         }
         // Replace delNode with successor
-        successor_node->parent = delNode->parent;
-        successor_node->left = delNode->left;
-        delNode->left->parent = successor_node;
+        successor->parent = delNode->parent;
+        successor->left = delNode->left;
+        delNode->left->parent = successor;
+        // Preserve original color
+        successor->colour = delNode->colour; 
+        
         if (delNode->parent == NULL) {
-            tree->root = successor_node;
-        } else if (delNode == delNode->parent->left) {
-            delNode->parent->left = successor_node;
+            tree->root = successor;
+        } else if (deleted_was_left_child) {
+            delNode->parent->left = successor;
         } else {
-            delNode->parent->right = successor_node;
+            delNode->parent->right = successor;
         }
     }
-    free(delNode);  //TODO: KEEP THIS??
-    tree->size -= 1;
+    free(delNode); // TODO: KEEP THIS??
+    
+    // If we deleted a black node, we may need to rebalance
+    if (deleted_color == Black) {
+        balance_tree_delete(tree, fixup_node, fixup_parent, deleted_was_left_child);
+    }
+}
 
-    //TODO: AI idea for balancing
-    if (deleted_color == Black && replacement != NULL) { //See claude code for deleted_color
-        balance_tree_delete(tree, replacement);
+void balance_tree_delete(treeStruct *tree, node *fixup_node, node *parent, bool is_left_child) {
+    // Continue until we reach root or find a red node to recolor black
+    while (fixup_node != tree->root && (fixup_node == NULL || fixup_node->colour == Black)) {
+        if (is_left_child) {
+            node *sibling = parent->right;
+            // Sibling is red
+            if (sibling != NULL && sibling->colour == Red) {
+                sibling->colour = Black;
+                parent->colour = Red;
+                trinode_left_rotation(tree, parent);
+                 // Update sibling after rotation
+                sibling = parent->right;
+            }
+            // Sibling is black with two black children
+            if (sibling == NULL || 
+                ((sibling->left == NULL || sibling->left->colour == Black) &&
+                 (sibling->right == NULL || sibling->right->colour == Black))) {
+                if (sibling != NULL) {
+                    sibling->colour = Red;
+                }
+                fixup_node = parent;
+                parent = parent->parent;
+                if (parent != NULL) {
+                    is_left_child = (fixup_node == parent->left);
+                }
+            } else {
+                // Sibling is black, left child is red, right child is black
+                if (sibling->right == NULL || sibling->right->colour == Black) {
+                    if (sibling->left != NULL) {
+                        sibling->left->colour = Black;
+                    }
+                    sibling->colour = Red;
+                    trinode_right_rotation(tree, sibling);
+                    sibling = parent->right;
+                }
+                // Sibling is black with red right child
+                sibling->colour = parent->colour;
+                parent->colour = Black;
+                if (sibling->right != NULL) {
+                    sibling->right->colour = Black;
+                }
+                trinode_left_rotation(tree, parent);
+                fixup_node = tree->root; // Break out of loop
+            }
+        } else {
+            // Mirror cases for right child
+            node *sibling = parent->left;
+            // Sibling is red
+            if (sibling != NULL && sibling->colour == Red) {
+                sibling->colour = Black;
+                parent->colour = Red;
+                trinode_right_rotation(tree, parent);
+                sibling = parent->left;
+            }
+            // Sibling is black with two black children
+            if (sibling == NULL || 
+                ((sibling->left == NULL || sibling->left->colour == Black) &&
+                 (sibling->right == NULL || sibling->right->colour == Black))) {
+                if (sibling != NULL) {
+                    sibling->colour = Red;
+                }
+                fixup_node = parent;
+                parent = parent->parent;
+                if (parent != NULL) {
+                    is_left_child = (fixup_node == parent->left);
+                }
+            } else {
+                // Sibling is black, right child is red, left child is black
+                if (sibling->left == NULL || sibling->left->colour == Black) {
+                    if (sibling->right != NULL) {
+                        sibling->right->colour = Black;
+                    }
+                    sibling->colour = Red;
+                    trinode_left_rotation(tree, sibling);
+                    sibling = parent->left;
+                }
+                // Sibling is black with red left child
+                sibling->colour = parent->colour;
+                parent->colour = Black;
+                if (sibling->left != NULL) {
+                    sibling->left->colour = Black;
+                }
+                trinode_right_rotation(tree, parent);
+                fixup_node = tree->root; // Break out of loop
+            }
+        }
+    }
+    // Ensure the fixup node is black
+    if (fixup_node != NULL) {
+        fixup_node->colour = Black;
     }
 }
 
