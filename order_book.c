@@ -9,13 +9,11 @@ void insert_node(treeStruct *tree, node *new_node) {
         new_node->colour = Black;  // Using the rule that the root is always black... At least to start with
         return;
     }
-    // Keep searching until a NULL leaf node found
-    bool found = false;
     // Start at trees root node
     node *curr_node = tree->root;
     // Inserting a node will always be a red node
     new_node->colour = Red;
-    while (!found) {
+    while (true) {
         if (new_node->price > curr_node->price) {
             // Logic for a new larger price
             if (curr_node->right == NULL) {
@@ -23,7 +21,6 @@ void insert_node(treeStruct *tree, node *new_node) {
                 new_node->parent = curr_node;
                 // Balance tree if issues caused
                 balance_tree_insert(tree, new_node);
-                found = true;  // TODO: might not need this
                 tree->size += 1;
                 return;
             } else {
@@ -35,7 +32,6 @@ void insert_node(treeStruct *tree, node *new_node) {
                 new_node->parent = curr_node;
                 // Balance tree if issues caused
                 balance_tree_insert(tree, new_node);
-                found = true;  // TODO: might not need this
                 tree->size += 1;
                 return;
             } else {
@@ -99,6 +95,7 @@ void balance_tree_insert(treeStruct *tree, node *curr_node) {
     return;
 }
 
+
 // Rotate nodes to balance tree
 void trinode_right_rotation(treeStruct *tree, node *curr_node) {
     node *left_child = curr_node->left;
@@ -122,6 +119,7 @@ void trinode_right_rotation(treeStruct *tree, node *curr_node) {
     left_child->right = curr_node;
     curr_node->parent = left_child;
 }
+
 
 // Rotate nodes to balance tree
 void trinode_left_rotation(treeStruct *tree, node *curr_node) {
@@ -147,15 +145,111 @@ void trinode_left_rotation(treeStruct *tree, node *curr_node) {
     curr_node->parent = right_child;
 }
 
-// Remove node from a tree and balance it
-void delete_node() {
 
+// Remove node from a tree and balance it -- Search for node before calling
+void delete_node(treeStruct *tree, node *delNode) {  //TODO: Root node case + colour check/balancing
+    node *replacement = NULL;
+    // If node has no children
+    if (delNode->left == NULL && delNode->right == NULL) {
+        if (delNode == delNode->parent->left) {
+            delNode->parent->left = NULL;
+            delNode = NULL;
+        } else {
+            delNode->parent->right = NULL;
+            delNode = NULL;
+        }
+    // If node has one child
+    } else if (delNode->left == NULL || delNode->right == NULL) {
+        replacement = (delNode->left != NULL) ? delNode->left : delNode->right;
+        replacement->parent = delNode->parent;
+        if (delNode->parent == NULL) {
+            tree->root = replacement;
+        } else if (delNode == delNode->parent->left) {
+            delNode->parent->left = replacement;
+        } else {
+            delNode->parent->right = replacement;
+        }
+    // If delNode has two child nodes
+    } else {
+        node *successor_node = inorder_successor(delNode);
+        replacement = successor_node->right; // TODO: CHECK IF NEEDED FOR BALANCING
+
+        // Remove successor from current position
+        if (successor_node->parent != delNode) {
+            successor_node->parent->left = successor_node->right;
+            if (successor_node->right != NULL) {
+                successor_node->right->parent = successor_node->parent;
+            }
+            successor_node->right = delNode->right;
+            delNode->right->parent = successor_node;
+        }
+        // Replace delNode with successor
+        successor_node->parent = delNode->parent;
+        successor_node->left = delNode->left;
+        delNode->left->parent = successor_node;
+        if (delNode->parent == NULL) {
+            tree->root = successor_node;
+        } else if (delNode == delNode->parent->left) {
+            delNode->parent->left = successor_node;
+        } else {
+            delNode->parent->right = successor_node;
+        }
+    }
+    free(delNode);  //TODO: KEEP THIS??
+    tree->size -= 1;
+
+    //TODO: AI idea for balancing
+    if (deleted_color == Black && replacement != NULL) { //See claude code for deleted_color
+        balance_tree_delete(tree, replacement);
+    }
 }
+
+
+// Find inorder successor of a node for BST deletion
+node *inorder_successor(node *delNode) {
+    if (delNode->right == NULL) {
+        return NULL;
+    } else {
+        node *curr_node = delNode->right;
+        while (curr_node->left != NULL) {
+            curr_node = curr_node->left;
+        }
+        return curr_node;
+    }
+}
+
+
+// BST search for a node with a given price value
+node *search_tree(treeStruct *tree, double searchPrice) {
+    node *curr_node = tree->root; 
+    while (true) {
+        // Check if at correct node first
+        if (searchPrice == curr_node->price) {
+            return curr_node;
+        // Check if we need to move right
+        } else if (searchPrice > curr_node->price) {
+            curr_node = curr_node->right;
+            // If we reach NULL then the node can't exist
+            if (curr_node == NULL) {
+                return NULL;
+            }
+        // Move to the left
+        } else {
+            curr_node = curr_node->left;
+            // If we reach NULL then the node can't exist
+            if (curr_node == NULL) {
+                return NULL;
+            }
+        }
+    }
+}
+
 
 // Alter the fixed sized trees to retain their rules
 void update_node() {
 
 }
+
 
 void main() {
 
