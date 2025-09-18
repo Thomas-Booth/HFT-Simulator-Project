@@ -1,6 +1,8 @@
 #include "order_book.h"
+#include "data_read.c"
 
 #define MAX_TREE_SIZE 10
+
 
 // Insert new nodes into the tree until it's max-size is reached
 void insert_node(treeStruct *tree, node *new_node) {
@@ -22,6 +24,7 @@ void insert_node(treeStruct *tree, node *new_node) {
     if (tree->size == 0) {
         tree->root = new_node;
         new_node->colour = Black;  // Using the rule that the root is always black... At least to start with
+        tree->size += 1;
         return;
     }
     // Start at trees root node
@@ -73,7 +76,7 @@ void insert_node(treeStruct *tree, node *new_node) {
 
 // Balance Red-Black Tree
 void balance_tree_insert(treeStruct *tree, node *curr_node) {
-    while (curr_node != NULL && curr_node->parent->colour == Red) {
+    while (curr_node != NULL && curr_node->parent != NULL && curr_node->parent->colour == Red) {
         // Check parent node's sibling
         if (curr_node->parent == curr_node->parent->parent->left) {
             node *uncle = curr_node->parent->parent->right;
@@ -94,11 +97,11 @@ void balance_tree_insert(treeStruct *tree, node *curr_node) {
                 // Right rotate and recolour
                 curr_node->parent->colour = Black;
                 curr_node->parent->parent->colour = Red;
-                trinode_right_rotate(tree, curr_node->parent->parent);
+                trinode_right_rotation(tree, curr_node->parent->parent);
             }
         } else {
             node *uncle = curr_node->parent->parent->left;
-            if (uncle->colour == Red) {
+            if (uncle != NULL && uncle->colour == Red) {
                 // Simple recolouring of parent and uncle
                 uncle->colour = Black;  // Recolour uncle
                 curr_node->parent->colour = Black;  // Recolour parent
@@ -420,11 +423,11 @@ node *search_tree(treeStruct *tree, double searchPrice) {
 
 // Find best ask or bid price depending on tree
 node *find_best_node(treeStruct *tree) {
-    node *curr_node = tree->root;
     // Check if tree empty
-    if (curr_node == NULL) {
+    if (tree->root == NULL) {
         return NULL;
     }
+    node *curr_node = tree->root;
     if (tree->type == Bid) {
         while (curr_node->right != NULL) {
             curr_node = curr_node->right;
@@ -467,6 +470,114 @@ void update_node_volume(treeStruct *tree, double price, double volumeChange) {
 }
 
 
-void main() {
+//! Clean up functions - Freeing allocated memory
+// Recursively Free a node and all decendents
+void free_nodes(node *curr_node) {
+    if (curr_node == NULL) {
+        return;
+    }
+    free_nodes(curr_node->left);
+    free_nodes(curr_node->right);
 
+    free(curr_node); // free this node AFTER its children
+}
+
+// Free up all nodes in the tree
+void free_tree(treeStruct *tree) {
+    if (tree == NULL) {
+        return;
+    }
+    free_nodes(tree->root);
+    tree->root = NULL;
+    tree->size = 0;
+}
+
+//! PRINTING TREE -- PROBABLY DELETE
+// Visual tree structure (horizontal layout)
+void print_tree_visual(treeStruct *tree) {
+    if (tree == NULL || tree->root == NULL) {
+        printf("Tree is empty\n");
+        return;
+    }
+    
+    printf("Red-Black Tree Structure:\n");
+    printf("Format: Value(Color) [LEFT: child | RIGHT: child]\n");
+    printf("Colors: R = Red, B = Black\n");
+    printf("----------------------------------------\n");
+    print_tree_recursive(tree->root, 0, "ROOT");
+    printf("\n");
+}
+
+void print_tree_recursive(node *root, int depth, char *prefix) {
+    if (root == NULL) {
+        return;
+    }
+    
+    // Print indentation
+    for (int i = 0; i < depth; i++) {
+        printf("│   ");
+    }
+    
+    // Print current node with clear left/right children info
+    printf("├── %s: %lf(%c)%lf [LEFT: ", prefix, root->price, root->colour == Red ? 'R' : 'B', root->volume);
+    if (root->left != NULL) {
+        printf("%lf(%c)%lf", root->left->price, root->left->colour == Red ? 'R' : 'B',root->left->volume);
+    } else {
+        printf("NULL");
+    }
+    printf(" | RIGHT: ");
+    if (root->right != NULL) {
+        printf("%lf(%c)%lf", root->right->price, root->right->colour == Red ? 'R' : 'B',root->right->volume);
+    } else {
+        printf("NULL");
+    }
+    printf("]\n");
+    
+    // Recursively print children
+    if (root->left != NULL) {
+        print_tree_recursive(root->left, depth + 1, "LEFT");
+    }
+    
+    if (root->right != NULL) {
+        print_tree_recursive(root->right, depth + 1, "RIGHT");
+    }
+}
+
+
+
+
+orderLine ol;
+char filename[] = "GBPUSD_mt5_ticks.csv";  //TODO: Improve this
+
+void main() {
+    // Initialise file pointer - so we can leave file open
+    FILE *fp = open_data_file(filename);
+    // Initialise bid and ask trees
+    treeStruct bidTree = {Bid, NULL, 0};
+    treeStruct askTree = {Ask, NULL, 0};
+    
+    /* while (read_next_line(fp, &ol) > 0) {
+        printf("Tick: %s %s bid=%.5f ask=%.5f vol_bid=%.2f vol_ask=%.2f\n",
+               ol.date, ol.time, ol.bidPrice, ol.askPrice, ol.bidVolume, ol.askVolume);
+    } */
+
+    while (read_next_line(fp, &ol) > 0) {
+        node *bid_node = malloc(sizeof(node));
+        if (!bid_node) {
+            printf("Error Allocating Memory!\n");
+            exit(-1);
+        }
+        *bid_node = (node){ol.bidPrice, ol.bidVolume, Red, NULL, NULL, NULL};
+
+        node *ask_node = malloc(sizeof(node));
+        if (!ask_node) {
+            printf("Error Allocating Memory!\n");
+            exit(-1);
+        }
+        *ask_node = (node){ol.askPrice, ol.askVolume, Red, NULL, NULL, NULL};
+
+        insert_node(&bidTree, bid_node);
+        insert_node(&askTree, ask_node);
+        print_tree_visual(&askTree);
+    }
 }

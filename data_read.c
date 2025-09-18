@@ -38,7 +38,7 @@ int read_next_line(FILE *fp, orderLine *orderObj) {
 
 
 
-orderLine ol;
+/* orderLine ol;
 char filename[] = "GBPUSD_mt5_ticks.csv";  //TODO: Improve this
 
 void main(){
@@ -49,4 +49,4 @@ void main(){
         printf("Tick: %s %s bid=%.5f ask=%.5f vol_bid=%.2f vol_ask=%.2f\n",
                ol.date, ol.time, ol.bidPrice, ol.askPrice, ol.bidVolume, ol.askVolume);
     }
-}
+} */
