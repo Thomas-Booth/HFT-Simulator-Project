@@ -6,7 +6,6 @@
 #include "order_book.c"
 
 
-
 typedef enum {Market, Limit} orderType;
 
 typedef struct {

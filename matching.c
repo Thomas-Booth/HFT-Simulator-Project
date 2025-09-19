@@ -209,15 +209,27 @@ return 1, complete valid match, order can succeed
 return 0, can partially match order, price level correct but not enough volume
 return -1, invalid match, create new order?
 */
-int valid_match(treeStruct *tree, double searchPrice, double searchVolume) {
-    node *match_node = NULL;
-    match_node = search_tree(tree, searchPrice);
-    if (match_node == NULL){
-        return -1;  // No valid match
-    } else if (match_node->volume >= searchVolume) {
-        return 1;  // Full valid match
-    } else {
-        return 0;  // Partial valid match
+int valid_match(treeStruct *tree, order *curr_order) {
+   node *match_node = NULL;
+   match_node = search_tree(tree, curr_order->orderInfo->price);
+   if (match_node == NULL){
+      return -1;  // No valid match
+   } else if (match_node->volume >= curr_order->orderInfo->volume) {
+      // Remove node from order book
+      delete_node(tree, match_node);
+      // Update portfolio from trade completing
+      
+      // Delete order since it will be fulfilled
+      delete_order_byPointer(curr_order);
+
+      return 1;  // Full valid match --- might not need this
+   } else {
+      if (curr_order->orderInfo->fill == Market) {
+         // Move up tree and buy/sell
+      } else {
+         // Create new order/Modify Current order for remaining volume
+      }
+        return 0;  // Partial valid match --- Might not need this
     }
 }
 
