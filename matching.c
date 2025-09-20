@@ -238,7 +238,6 @@ int valid_match(treeStruct *tree, order *curr_order, userAccount *user) {  //TOD
    // Check if price is good enough for current order if required
    bool priceGoodEnough = price_better_or_equal(curr_order, match_node->price);
 
-   printf("Best node is %lf\n", match_node->price);
    // No valid match
    if (match_node == NULL){
       return -1;  // No valid match
@@ -313,7 +312,8 @@ void main() {  //TODO: Pointer safety checks on malloc calls and stuff
    }  */
 
    // Manually inserting value into order map for now
-   insert_order_byValues(1, Ask, 1.35036, 0.5, Market);
+   insert_order_byValues(1, Bid, 1.35022, 0.5, Limit); //TODO: Make it so I can search through all orders in the loop below -- then we can move onto live trading strategies or make a button or something idk
+
 
    while (read_next_line(fp, &ol) > 0) {
       node *bid_node = malloc(sizeof(node));
@@ -338,9 +338,11 @@ void main() {  //TODO: Pointer safety checks on malloc calls and stuff
       order *curr_order = search_orders(1);
       // Choose correct tree to search
       treeStruct *tree_to_choose = (curr_order->orderInfo->type == Bid) ?  &askTree: &bidTree;
-      valid_match(tree_to_choose, curr_order, &user);
-      printf("- User Balances -\n GBP: %lf\n USD: %lf\n", user.baseCurrencyBalance, user.quoteCurrencyBalance);
-      printf("Printing after where I should have printed!\n");
+      int outcome = valid_match(tree_to_choose, curr_order, &user);
+
+      if (outcome >= 0) {
+         printf("- User Balances -\n GBP: %lf\n USD: %lf\n", user.baseCurrencyBalance, user.quoteCurrencyBalance);
+      }
    }
    // Clean up remaining orders
    freeHashTable();
