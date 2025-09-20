@@ -1,5 +1,4 @@
 #include "order_book.h"
-#include "data_read.c"
 
 
 #define MAX_TREE_SIZE 10
@@ -257,6 +256,7 @@ void delete_node(treeStruct *tree, node *delNode) {
         }
     }
     free(delNode); // TODO: KEEP THIS??
+    delNode = NULL;
     
     // If we deleted a black node, we may need to rebalance
     if (deleted_color == Black) {
@@ -465,9 +465,53 @@ node *find_worst_node(treeStruct *tree) {
 }
 
 
+// Find the next best node to move to after best -- Basically inorder traversal step
+node *find_next_best(treeStruct *tree, node *curr_node) {
+    if (curr_node == NULL) {
+        return NULL;
+    }
+    // Find next highest bid
+    if (tree->type == Bid) {
+        // Find right most node of left subtree
+        if (curr_node->left != NULL) {
+            curr_node = curr_node->left;
+            while (curr_node->right != NULL) {
+                curr_node = curr_node->right;
+            }
+            return curr_node;
+        }
+        // If no left subtree find a node that is a right child
+        node *parent = curr_node->parent;
+        while (parent != NULL && curr_node == parent->left) {
+            curr_node = parent;
+            parent = parent->parent;
+
+        }
+        return parent;
+    // Find next smallest ask
+    } else {
+        // Find left most node of right subtree
+        if (curr_node->right != NULL) {
+            curr_node = curr_node->right;
+            while (curr_node->left != NULL) {
+                curr_node = curr_node->left;
+            }
+            return curr_node;
+        }
+        // If no right subtree find a node that is a left child
+        node *parent = curr_node->parent;
+        while (parent != NULL && curr_node == parent->right) {
+            curr_node = parent;
+            parent = parent->parent;
+
+        }
+        return parent;
+    }
+}
+
+
 // Alter the volume of an order
-void update_node_volume(treeStruct *tree, double price, double volumeChange) {
-    node *curr_node = search_tree(tree, price);
+void update_node_volume(treeStruct *tree, node *curr_node, double volumeChange) {
     curr_node->volume += volumeChange;
 }
 
@@ -551,8 +595,8 @@ void print_tree_recursive(node *root, int depth, char *prefix) {
 
 
 
-orderLine ol;
-char filename[] = "GBPUSD_mt5_ticks.csv";  //TODO: Improve this
+/* orderLine ol;
+char filename[] = "GBPUSD_mt5_ticks.csv";  //TODO: Improve this */
 
 /* void main() {
     // Initialise file pointer - so we can leave file open

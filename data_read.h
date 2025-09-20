@@ -1,3 +1,6 @@
+#ifndef DATAREAD_H
+#define DATAREAD_H
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,3 +14,8 @@ typedef struct {
     double bidVolume;
     double askVolume;
 } orderLine;
+
+FILE *open_data_file(const char *filename);
+int read_next_line(FILE *fp, orderLine *orderObj);
+
+#endif

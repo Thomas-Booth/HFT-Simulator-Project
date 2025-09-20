@@ -1,7 +1,12 @@
+#ifndef ORDERBOOK_H
+#define ORDERBOOK_H
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+
+#include "data_read.h"
 
 typedef enum {Red, Black} nodeColour;
 typedef enum {Bid, Ask} tradeType; 
@@ -33,9 +38,12 @@ node *inorder_successor(node *delNode);
 node *search_tree(treeStruct *tree, double searchPrice);
 node *find_best_node(treeStruct *tree);
 node *find_worst_node(treeStruct *tree);
-void update_node_volume(treeStruct *tree, double price, double volumeChange);
+node *find_next_best(treeStruct *tree, node *curr_node);
+void update_node_volume(treeStruct *tree, node *curr_node, double volumeChange);
 
 
 //!
 void print_tree_visual(treeStruct *tree);
 void print_tree_recursive(node *root, int depth, char *prefix);
+
+#endif

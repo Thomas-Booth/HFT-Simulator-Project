@@ -1,9 +1,14 @@
+#ifndef MATCHING_H
+#define MATCHING_H
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "order_book.c"
+#include "data_read.h"
+#include "order_book.h"
+#include "portfolio_tracker.h"
 
 
 typedef enum {Market, Limit} orderType;
@@ -20,3 +25,5 @@ typedef struct {
     int orderID;
     orderData *orderInfo;
 } order;
+
+#endif
