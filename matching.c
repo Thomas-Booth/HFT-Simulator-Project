@@ -1,25 +1,8 @@
 #include "matching.h"
 
-// Define max size of hashtable to be prime number
-#define SIZE 37
-
 
 // Hash table array
 order* hashArray[SIZE]; 
-// Keep track of hashtable's free space --- May change this when implementing strategies
-int freeSpace = SIZE;
-// Define a starting index for orders to use as a key if needed
-int countID = 0;
-
-//! Some global declarationsv  -- Needed in our main()
-orderLine ol;
-char filename[] = "GBPUSD_mt5_ticks.csv";  //TODO: Improve this
-// Initialise bid and ask trees
-treeStruct bidTree = {Bid, NULL, 0};
-treeStruct askTree = {Ask, NULL, 0};
-// Define a global user
-userAccount user = {0, 10};
-
 
 // Hash function - uses orderID as the key
 int hashCode(int orderID) {
@@ -47,47 +30,9 @@ order *search_orders(int orderID) {
    return NULL;        
 }
 
-// Insert a new order
-void insert_order_byValues(int orderID, tradeType type, double price, double volume, orderType fill) {
-   // Return an error message if a user tries to overload the hashtable -- Consider changing this
-   if (freeSpace <= 0) {
-      printf("Reached Maximum Number of Outgoing Orders!\n");
-      return;
-   }
-   // Create new order
-   order *newOrder = (order*) malloc(sizeof(order));
-   newOrder->orderID = orderID;
-   
-   // Create orderData
-   newOrder->orderInfo = (orderData*) malloc(sizeof(orderData));
-   newOrder->orderInfo->type = type;
-   newOrder->orderInfo->price = price;
-   newOrder->orderInfo->volume = volume;
-   newOrder->orderInfo->fill = fill;
-   
-   // Get the hash 
-   int hashIndex = hashCode(orderID);
-   
-   // Move in array until an empty or deleted cell
-   while(hashArray[hashIndex] != NULL && hashArray[hashIndex]->orderID != orderID) {
-      // Go to next cell
-      hashIndex++;
-		
-      // Wrap around the table
-      hashIndex %= SIZE;
-   }
-	
-   hashArray[hashIndex] = newOrder;
-   freeSpace--;
-}
 
-// Alternative insert function that takes an order pointer
+// Insert an order into the hashtable
 void insert_order_byPointer(order* orderPtr) {
-   // Return an error message if a user tries to overload the hashtable -- Consider changing this
-   if (freeSpace <= 0) {
-      printf("Reached Maximum Number of Outgoing Orders!\n");
-      return;
-   }
    // Don't add NULL pointer to active orders
    if(orderPtr == NULL) {
       return;
@@ -326,40 +271,3 @@ void match_all_orders() {
 }
 
 
-void main() {  //TODO: Pointer safety checks on malloc calls and stuff
-   
-
-   // Initialize hash table
-   initHashTable();
-
-   // Initialise file pointer - so we can leave file open
-   FILE *fp = open_data_file(filename);
-
-   // Manually inserting value into order map for now
-   insert_order_byValues(1, Bid, 1.35022, 0.5, Limit); //TODO: Make it so I can search through all orders in the loop below -- then we can move onto live trading strategies or make a button or something idk
-   insert_order_byValues(2, Bid, 1.35029, 0.5, Limit);
-
-   while (read_next_line(fp, &ol) > 0) {
-      node *bid_node = malloc(sizeof(node));
-      if (!bid_node) {
-         printf("Error Allocating Memory!\n");
-         exit(-1);
-      }
-      *bid_node = (node){ol.bidPrice, ol.bidVolume, Red, NULL, NULL, NULL};
-
-      node *ask_node = malloc(sizeof(node));
-      if (!ask_node) {
-         printf("Error Allocating Memory!\n");
-         exit(-1);
-      }
-      *ask_node = (node){ol.askPrice, ol.askVolume, Red, NULL, NULL, NULL};
-
-      insert_node(&bidTree, bid_node);
-      insert_node(&askTree, ask_node);
-
-      // Try to complete orders with updated order book
-      match_all_orders();
-   }
-   // Clean up remaining orders
-   freeHashTable();
-}
