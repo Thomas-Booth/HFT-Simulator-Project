@@ -66,6 +66,7 @@ void insert_node(treeStruct *tree, node *new_node) {
             }
         } else {
             curr_node->volume += new_node->volume;
+            free(new_node);
             return;
         }
     }
@@ -379,7 +380,6 @@ void recursive_delete(treeStruct *tree, node *curr_node, node *best_node) {
             delete_node(tree, curr_node);
         }
     }
-    
 }
 
 

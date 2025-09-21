@@ -11,6 +11,16 @@ int freeSpace = SIZE;
 // Define a starting index for orders to use as a key if needed
 int countID = 0;
 
+//! Some global declarationsv  -- Needed in our main()
+orderLine ol;
+char filename[] = "GBPUSD_mt5_ticks.csv";  //TODO: Improve this
+// Initialise bid and ask trees
+treeStruct bidTree = {Bid, NULL, 0};
+treeStruct askTree = {Ask, NULL, 0};
+// Define a global user
+userAccount user = {0, 10};
+
+
 // Hash function - uses orderID as the key
 int hashCode(int orderID) {
    return orderID % SIZE;
@@ -289,31 +299,45 @@ int valid_match(treeStruct *tree, order *curr_order, userAccount *user) {  //TOD
 }
 
 
-// Some global declarations
-orderLine ol;
-char filename[] = "GBPUSD_mt5_ticks.csv";  //TODO: Improve this
+// Iterate over order hash table and try to resolve them
+void match_all_orders() {
+   order *orders_to_process[SIZE];
+   int order_count = 0;
+
+   for (int i = 0; i < SIZE; i++) {
+      if (hashArray[i] != NULL) {
+         orders_to_process[order_count] = hashArray[i];
+         order_count++;
+      }
+   }
+   for (int i=0; i < order_count; i++) {
+      order *curr_order = orders_to_process[i];
+      if (search_orders(curr_order->orderID) != NULL) {
+         // Choose correct tree to search
+         treeStruct *tree_to_choose = (curr_order->orderInfo->type == Bid) ?  &askTree : &bidTree;
+         // Try to resolve order
+         int outcome = valid_match(tree_to_choose, curr_order, &user);
+         // Display new balance if changes made
+         if (outcome >= 0) {
+            printf("- User Balances -\n GBP: %lf\n USD: %lf\n", user.baseCurrencyBalance, user.quoteCurrencyBalance);
+         }
+      }
+   }
+}
+
 
 void main() {  //TODO: Pointer safety checks on malloc calls and stuff
-   // Define a global user
-   userAccount user = {0, 10};
+   
 
    // Initialize hash table
    initHashTable();
 
    // Initialise file pointer - so we can leave file open
    FILE *fp = open_data_file(filename);
-   // Initialise bid and ask trees
-   treeStruct bidTree = {Bid, NULL, 0};
-   treeStruct askTree = {Ask, NULL, 0};
-    
-   /* while (read_next_line(fp, &ol) > 0) {
-      printf("Tick: %s %s bid=%.5f ask=%.5f vol_bid=%.2f vol_ask=%.2f\n",
-         ol.date, ol.time, ol.bidPrice, ol.askPrice, ol.bidVolume, ol.askVolume);
-   }  */
 
    // Manually inserting value into order map for now
    insert_order_byValues(1, Bid, 1.35022, 0.5, Limit); //TODO: Make it so I can search through all orders in the loop below -- then we can move onto live trading strategies or make a button or something idk
-
+   insert_order_byValues(2, Bid, 1.35029, 0.5, Limit);
 
    while (read_next_line(fp, &ol) > 0) {
       node *bid_node = malloc(sizeof(node));
@@ -333,16 +357,8 @@ void main() {  //TODO: Pointer safety checks on malloc calls and stuff
       insert_node(&bidTree, bid_node);
       insert_node(&askTree, ask_node);
 
-
-      // Search through orders to see if we can resolve any
-      order *curr_order = search_orders(1);
-      // Choose correct tree to search
-      treeStruct *tree_to_choose = (curr_order->orderInfo->type == Bid) ?  &askTree: &bidTree;
-      int outcome = valid_match(tree_to_choose, curr_order, &user);
-
-      if (outcome >= 0) {
-         printf("- User Balances -\n GBP: %lf\n USD: %lf\n", user.baseCurrencyBalance, user.quoteCurrencyBalance);
-      }
+      // Try to complete orders with updated order book
+      match_all_orders();
    }
    // Clean up remaining orders
    freeHashTable();

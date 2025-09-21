@@ -1,6 +1,6 @@
 #include "data_read.h"
 
-#define MAX_ROW_LENGTH 77
+#define MAX_ROW_LENGTH 80
 
 // Opens CSV file of order details: Date, Time, BidPrice, AskPrice, BidVol, AskVol
 FILE *open_data_file(const char *filename) {
