@@ -112,8 +112,8 @@ void cleanup_udp() {
 #define STARTING_BALANCE 10  // How much USD (in 100,000s) we begin with
 
 // Define our basic support/resistance strategy bounds -- Not necessary if different strategy used
-#define SUPPORT 1.28000
-#define RESISTANCE 1.35000
+#define SUPPORT 1.34600
+#define RESISTANCE 1.35300
 
 
 //! Some global declarations/definitions
@@ -122,7 +122,7 @@ orderLine ol;
 
 // Define our input file -- Must be of format: Date, Time, bidPrice, askPrice, bidVolume, askVolume
 // CURRENTLY SET TO THE YEAR LONG TICK VERSION - CAN BE CHANGED TO SHORTER FILE
-char filename[] = "GBPUSD_PAST_YEAR_ticks.csv";
+char filename[] = "GBPUSD_SHORTER_ticks.csv";
 
 // Initialise bid and ask trees
 treeStruct bidTree = {Bid, NULL, 0};

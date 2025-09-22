@@ -41,8 +41,8 @@ class RealTimeGrapher:
         
         #! UPDATE THESE HORIZONTAL LINES' VALUES IF USING SUPPORT/RESISTANCE STRATEGY
         # Static support/resistance lines (drawn once, not updated) - Used to show support/resistance levels
-        self.ax1.axhline(y=1.35000, color='black', linestyle='--', linewidth=2, alpha=0.7, label='Resistance Value')
-        self.ax1.axhline(y=1.28000, color='black', linestyle='--', linewidth=2, alpha=0.7, label='Support Value')
+        self.ax1.axhline(y=1.35300, color='black', linestyle='--', linewidth=2, alpha=0.7, label='Resistance Value')
+        self.ax1.axhline(y=1.34600, color='black', linestyle='--', linewidth=2, alpha=0.7, label='Support Value')
     
         
         self.ax1.set_title(f'Bid/Ask Prices')
@@ -50,7 +50,7 @@ class RealTimeGrapher:
         self.ax1.set_ylabel('Price')
         
         #! UPDATE THE Y_LIMITS TO FIT THE GRAPH YOU WANT TO VIEW
-        self.ax1.set_ylim(1.20, 1.45)
+        self.ax1.set_ylim(1.30, 1.36)
         
         
         self.ax1.legend()
