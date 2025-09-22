@@ -13,7 +13,7 @@ A high-performance C-based high-frequency trading system with live data visualiz
 - **Cross-Platform**: Windows and Linux support
 - **Memory Efficient**: Limited tree sizes with automatic cleanup
 - **UDP Communication**: Low-latency data streaming between C and Python
-- **Advanced Matching**: Support for market and limit orders
+- **Advanced Matching**: Support for *market* and *limit* orders
 - **Strategy Implementation**: Built-in support/resistance trading strategies with capability to develop other custom strategies
 
 ## Table of Contents
