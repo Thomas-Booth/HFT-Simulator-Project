@@ -1,13 +1,20 @@
 #include "matching.h"
 
+// Define max size of hashtable to be prime number
+#define SIZE 103
 
 // Hash table array
-order* hashArray[SIZE]; 
+order* hashArray[SIZE];
+
+// Keep track of hashtable's free space
+int freeSpace = SIZE;
+
 
 // Hash function - uses orderID as the key
 int hashCode(int orderID) {
    return orderID % SIZE;
 }
+
 
 // Search for an order by orderID
 order *search_orders(int orderID) {
@@ -49,10 +56,11 @@ void insert_order_byPointer(order* orderPtr) {
       // Wrap around the table
       hashIndex %= SIZE;
    }
-	
+	// Insert order into table and update freeSpace
    hashArray[hashIndex] = orderPtr;
    freeSpace--;
 }
+
 
 // Delete an order
 void delete_order_byPointer(order* orderPtr) {
@@ -91,6 +99,7 @@ void delete_order_byPointer(order* orderPtr) {
    }            
 }
 
+
 // Delete by orderID
 void delete_order_byID(int orderID) {
    // Get the hash 
@@ -123,12 +132,10 @@ void delete_order_byID(int orderID) {
 }
 
 
-//! TO DELETE -- Display all orders in the hash table
+// Display all orders in the hash table -- FOR DEBUGGING
 void display() {
    int i = 0;
-	
    for(i = 0; i < SIZE; i++) {
-	
       if(hashArray[i] != NULL) {
          printf(" [ID:%d, Type:%s, Price:%.2f, Vol:%.2f, Fill:%s]", 
                 hashArray[i]->orderID,
@@ -140,7 +147,6 @@ void display() {
          printf(" ~~ ");
       }
    }
-	
    printf("\n");
 }
 
@@ -154,7 +160,6 @@ void initHashTable() {
 }
 
 
-//! Clean up memory
 // Free remaining orders in orderList
 void freeHashTable() {
    for(int i = 0; i < SIZE; i++) {
@@ -187,7 +192,7 @@ bool price_better_or_equal(order *curr_order, double nodePrice) {
 
 
 // Check order book if a passed order can be completed at all - if so, do it
-int valid_match(treeStruct *tree, order *curr_order, userAccount *user) {  //TODO: Maybe re-write this function again to make it more seamless, it's a bit fiddly still with the market/limit differences
+int valid_match(treeStruct *tree, order *curr_order, userAccount *user) { 
    // Find best current node in desired orderbook side
    node *match_node = find_best_node(tree);
    // Check if price is good enough for current order if required
@@ -197,7 +202,7 @@ int valid_match(treeStruct *tree, order *curr_order, userAccount *user) {  //TOD
    if (match_node == NULL){
       return -1;  // No valid match
    }
-   while (match_node != NULL) {  //TODO: Consider this condition more
+   while (match_node != NULL) {
 
       // Full valid match
       if (match_node->volume >= curr_order->orderInfo->volume && (curr_order->orderInfo->fill == Market || (curr_order->orderInfo->fill == Limit && priceGoodEnough))) { 
@@ -206,7 +211,7 @@ int valid_match(treeStruct *tree, order *curr_order, userAccount *user) {  //TOD
             // Update portfolio from trade completing
             update_portfolio(curr_order->orderInfo->type, match_node->price, curr_order->orderInfo->volume, user);
             // Remove node from order book
-            delete_node(tree, match_node); // TODO: Might need to store this data for portfolio update tho...
+            delete_node(tree, match_node);
          } else {
             // Update portfolio from trade completing
             update_portfolio(curr_order->orderInfo->type, match_node->price, curr_order->orderInfo->volume, user);
@@ -246,15 +251,18 @@ int valid_match(treeStruct *tree, order *curr_order, userAccount *user) {  //TOD
 
 // Iterate over order hash table and try to resolve them
 void match_all_orders() {
+   // Create a buffer to hold the orders that need updating
    order *orders_to_process[SIZE];
    int order_count = 0;
 
+   // Locate orders to update
    for (int i = 0; i < SIZE; i++) {
       if (hashArray[i] != NULL) {
          orders_to_process[order_count] = hashArray[i];
          order_count++;
       }
    }
+   // Update the orders in our new buffer
    for (int i=0; i < order_count; i++) {
       order *curr_order = orders_to_process[i];
       if (search_orders(curr_order->orderID) != NULL) {
@@ -269,5 +277,3 @@ void match_all_orders() {
       }
    }
 }
-
-

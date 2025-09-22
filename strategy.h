@@ -1,3 +1,6 @@
+#ifndef STRATEGY_H
+#define STRATEGY_H
+
 // Standard includes
 #include <string.h>
 #include <stdio.h>
@@ -10,7 +13,11 @@
 #include "portfolio_tracker.h"
 
 // Declaring global variables
-extern int freeSpace;
 extern userAccount user;
-extern treeStruct bidTree;
-extern treeStruct askTree;
+extern int freeSpace;
+
+// Function declarations
+order *create_order(tradeType type, double price, double volume, orderType fill);
+void check_and_react_supportResistance(double support, double resistance);
+
+#endif

@@ -1,16 +1,17 @@
 #ifndef ORDERBOOK_H
 #define ORDERBOOK_H
 
+// Standard includes
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "data_read.h"
-
+// Enums defined for basic differentiators
 typedef enum {Red, Black} nodeColour;
 typedef enum {Bid, Ask} tradeType; 
 
+// Struct the define a node in a tree
 typedef struct node{
     double price;
     double volume;
@@ -20,6 +21,7 @@ typedef struct node{
     struct node *parent;
 } node;
 
+// Struct to hold basic tree data
 typedef struct {
     tradeType type;
     node *root;
@@ -40,9 +42,8 @@ node *find_best_node(treeStruct *tree);
 node *find_worst_node(treeStruct *tree);
 node *find_next_best(treeStruct *tree, node *curr_node);
 void update_node_volume(treeStruct *tree, node *curr_node, double volumeChange);
-
-
-//!
+void free_nodes(node *curr_node);
+void free_tree(treeStruct *tree);
 void print_tree_visual(treeStruct *tree);
 void print_tree_recursive(node *root, int depth, char *prefix);
 
