@@ -22,6 +22,7 @@ A high-performance C-based high-frequency trading system with live data visualiz
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
 - [Architecture](#architecture)
+- [Core Components](#core-components)
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
 
@@ -45,7 +46,7 @@ python graphing.py
 ./trading_program.exe
 ```
 
-##Prerequisites
+## Prerequisites
 
 - **Python**: 3.7+ with matplotlib support
 - **C Compiler**: GCC, Clang, or MSVC
@@ -99,7 +100,7 @@ graph TB
     H --> I[Real-time Graphs]
 ```
 
-### Core Components
+## Core Components
 
 | Component | Description | Data Structure |
 |-----------|-------------|----------------|
@@ -165,20 +166,20 @@ self.ax2.axhline(y=10, color='orange', ..., label='Starting Balance')      # Set
 self.ax2.set_ylim(9, 11)                                      # Set y-limits for the graph to fit the view you want
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
 
-<strong>❌ "Failed to bind to port 8888"</strong>
+<strong>"Failed to bind to port 8888"</strong>
 
 Port already in use. Change the port:
 ```python
-# In realtime_graph.py
+# In graphing.py
 self.sock.bind(('127.0.0.1', 8889))  # Use different port
 ```
 
 ```c
-// In C code
+// In main.c
 server_addr.sin_port = htons(8889);  // Match Python port
 ```
