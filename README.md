@@ -16,6 +16,8 @@ A high-performance C-based high-frequency trading system with live data visualiz
 - **Advanced Matching**: Support for *market* and *limit* orders
 - **Strategy Implementation**: Built-in support/resistance trading strategies with capability to develop other custom strategies
 
+![Demo of HFT Simulator](HFT_Demo_Vid.gif)
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
