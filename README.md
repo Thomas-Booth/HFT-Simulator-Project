@@ -26,6 +26,7 @@ A high-performance C-based high-frequency trading system with live data visualiz
 - [Architecture](#architecture)
 - [Core Components](#core-components)
 - [Configuration](#configuration)
+- [Benchmarks](#performance-benchmarks)
 - [Troubleshooting](#troubleshooting)
 
 ## Quick Start
@@ -118,7 +119,7 @@ graph TB
 - **Best price lookup**: O(1)
 - **Order matching**: O(1) hash lookup + O(log n) tree operations
 - **Memory usage**: configurable by setting maximum tree and hash table sizes
-- **Network latency**: ~100μs per update
+- **Network latency**: ~0.1μs per update (average)
 
 ## Configuration
 
@@ -166,6 +167,110 @@ self.ax2.axhline(y=10, color='orange', ..., label='Starting Balance')      # Set
 
 #! UPDATE Y_LIMIT VALUES TO FIT GRAPH YOU WANT TO VIEW          
 self.ax2.set_ylim(9, 11)                                      # Set y-limits for the graph to fit the view you want
+```
+
+## Performance Benchmarks
+
+### System Specifications
+Benchmarks performed on:
+- **CPU**: Intel i9-10850K @ 3.60GHz (10 cores)
+- **RAM**: 32GB DDR4-3600
+- **Storage**: NVMe SSD
+- **OS**: Windows 11
+- **Compiler**: GCC 15.2.0 with `-O3` optimization
+
+### Throughput Performance
+
+| Dataset Size | Lines/Second | Memory Usage | Avg. Loop Time| Total Time |
+|--------------|-------------|--------------|----------------|------------|
+| 757K lines    | 22163      | 4.5 MB       | 44.5 µs        | 34.2 s     |
+
+
+### Operation Breakdown
+
+Performance profile for 757k line dataset:
+
+| Operation | Total Time (ms) | Avg Time (μs) | Max Time (μs)| Calls  | Description |
+|-----------|-----------------|---------------|--------------|--------|-------------|
+| `system_initialisation`| 1.44 | 1441.1 | 1441.1 | 1 | Memory allocation |
+| `CSV_reading`| 2901.55 | 20.2 | 65.8 | 1  | Data Read-In |
+| `node_allocation`| 98.02 | 0.1 | 29.2 | 757083 | Memory allocation |
+| `tree_insertions`| 157.76 | 0.2 | 50.3 | 757083 | Red-black tree operations |
+| `strategy_execution`| 52.39 | 0.1 | 60.3 | 757083 | Trading algorithm |
+| `order_matching`| 84.68 | 0.1 | 25.5 | 757083 | Hash table lookups |
+| `price_lookups`| 45.21 | 0.1 | 19.8 | 757083 | Best price queries |
+| `network_output`| 94.89 | 0.1 | 485.3 | 757083 | UDP data streaming |
+| `cleanup`| 0.02 | 20.2 | 20.2 | 1 | Freeing memory |
+
+
+### Memory Efficiency
+
+- **Peak Memory**: <4.6MB for datasets up to 757K lines
+- **Memory Growth**: Linear O(n) with tree size limits (max 1000 nodes per tree by default)
+
+### Algorithmic Complexity
+
+| Operation | Time Complexity | Space Complexity | Notes |
+|-----------|----------------|------------------|-------|
+| Order Book Insert | O(log n) | O(1) | Red-black tree insertion |
+| Best Price Lookup | O(1) | O(1) | Direct tree root access |
+| Order Matching | O(1) avg | O(n) | Hash table with collision handling (Linear Probing) |
+| Tree Rebalancing | O(log n) | O(1) | Automatic red-black balancing |
+
+
+### Running Benchmarks
+
+#### Quick Benchmark
+Benchmark functions used above can be found in `benchmark.c`. These can be used by first adding `#include "benchmark.h"` to `main.c`.
+Then you are free to place benchmarking functions wherever you please, following a similar format to below:
+
+```c
+// ... inside near start of main()
+perf_init("my_benchmark.log");
+
+
+// Example timing benchmark
+perf_start_timing("tree_insertions");
+// TREE INSERTION LOGIC
+insert_node(&bidTree, bid_node);
+insert_node(&askTree, ask_node);
+perf_end_timing("tree_insertions");
+
+
+// Example Interim benchmarks
+if (lines_processed % 10000 == 0) {
+   // Example memory benchmark
+   monitor_memory_usage("main_loop_progress");
+
+   // Show interim throughput
+   double elapsed_ms = get_time_ms() - loop_start_time;
+   double throughput = lines_processed / (elapsed_ms / 1000.0);
+   printf("Progress: %d lines, %.0f lines/sec\n", lines_processed, throughput);
+}
+
+// ... at end of main()
+
+// Calculate final results
+double total_time = get_time_ms() - loop_start_time;
+double final_throughput = lines_processed / (total_time / 1000.0);
+   
+printf("\n=== PROCESSING SUMMARY ===\n");
+printf("Total lines processed: %d\n", lines_processed);
+printf("Total time: %.2f ms\n", total_time);
+printf("Average throughput: %.0f lines/second\n", final_throughput);
+
+perf_print_summary();
+perf_cleanup();
+```
+
+```bash
+# Compile with optimization
+gcc -Wall -g -O3 -o trading_program.exe *.c -lws2_32 -lm
+
+# Run as normal
+./trading_program.exe
+
+# Output: my_benchmark.log + console summary
 ```
 
 ## Troubleshooting
