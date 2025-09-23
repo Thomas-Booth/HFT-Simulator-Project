@@ -119,7 +119,6 @@ graph TB
 - **Best price lookup**: O(1)
 - **Order matching**: O(1) hash lookup + O(log n) tree operations
 - **Memory usage**: configurable by setting maximum tree and hash table sizes
-- **Network latency**: ~0.1μs per update (average)
 
 ## Configuration
 
