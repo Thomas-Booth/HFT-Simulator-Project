@@ -270,10 +270,10 @@ void match_all_orders() {
          treeStruct *tree_to_choose = (curr_order->orderInfo->type == Bid) ?  &askTree : &bidTree;
          // Try to resolve order
          int outcome = valid_match(tree_to_choose, curr_order, &user);
-         // Display new balance if changes made
+         /* //Display new balance if changes made -- Good for debugging
          if (outcome >= 0) {
             printf("- User Balances -\n GBP: %lf\n USD: %lf\n", user.baseCurrencyBalance, user.quoteCurrencyBalance);
-         }
+         } */
       }
    }
 }

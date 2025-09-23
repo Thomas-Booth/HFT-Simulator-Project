@@ -186,8 +186,11 @@ int main() {
       // Calculate current portfolio value based on best bid price
       double portfolioValue = (user.baseCurrencyBalance*best_bid_price)+user.quoteCurrencyBalance;
 
-      // Write what has happened to outer file - acts as ledger and graphing
-      send_graph_data(best_bid_price, best_ask_price, portfolioValue, lines_processed);
+      // Only send graph data every 500 CSV lines - We read ~20,000/s so we still write ~40 time/s
+      if (lines_processed % 500 == 0) {
+         // Write what has happened to outer file - acts as ledger and graphing
+         send_graph_data(best_bid_price, best_ask_price, portfolioValue, lines_processed);
+      }
    }
    // Clean up remaining orders
    freeHashTable();
