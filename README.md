@@ -181,7 +181,7 @@ Benchmarks performed on:
 
 ### Throughput Performance
 
-| Dataset Size | Lines/Second | Memory Usage | Avg. Loop Time| Total Time |
+| Dataset Size | CSV Lines/Second | Memory Usage | Avg. Loop Time| Total Time |
 |--------------|-------------|--------------|----------------|------------|
 | 757K lines    | 22163      | 4.5 MB       | 44.5 µs        | 34.2 s     |
 
